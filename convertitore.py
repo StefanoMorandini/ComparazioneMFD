@@ -3,47 +3,60 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Assumi che `comparison_df` sia il tuo DataFrame già preparato
-# comparison_df = prepare_comparison_data(df1, df2, columns_to_compare) 
+def prepare_comparison_data(df1, df2):
+    # Assuming 'Start Date' is a column in both dataframes, and its format is consistent
+    # Merging dataframes on 'Cinema', 'LV', and 'Title' but keeping different 'Start Dates'
+    comparison_df = pd.merge(df1, df2, on=['Cinema', 'LV', 'Title'], suffixes=('_df1', '_df2'))
+    
+    # Ensure that 'Start Date' columns are in datetime format to compare
+    comparison_df['Start Date_df1'] = pd.to_datetime(comparison_df['Start Date_df1'])
+    comparison_df['Start Date_df2'] = pd.to_datetime(comparison_df['Start Date_df2'])
+    
+    # Filter to keep rows where 'Start Dates' are different
+    comparison_df = comparison_df[comparison_df['Start Date_df1'] != comparison_df['Start Date_df2']]
+    
+    return comparison_df
 
-def plot_cinema_comparison(comparison_df, cinema_name, columns_to_compare):
-    # Filtra il dataframe per il cinema selezionato
+def plot_cinema_comparison(comparison_df, cinema_name):
+    # Filtering data for the selected cinema
     df_cinema = comparison_df[comparison_df['Cinema'] == cinema_name]
     
-    # Prepara i dati per il plotting
-    # Assicurati che il DataFrame sia organizzato per permettere un confronto efficace
-    melted_df = df_cinema.melt(id_vars=['Cinema', 'LV', 'Title', 'Start Date_df1', 'Start Date_df2'],
-                               value_vars=[col + suffix for col in columns_to_compare for suffix in ['_df1', '_df2']],
-                               var_name='Metric', value_name='Value')
+    # Selecting columns to compare
+    columns_to_compare = ['Adm. Week_df1', 'Adm. Week_df2']  # Example with 'Adm. Week'; extend as needed
     
-    # Sostituisci i suffissi '_df1' e '_df2' per chiarezza nel grafico
-    melted_df['Metric'] = melted_df['Metric'].str.replace('_df1', ' (Doc 1)').str.replace('_df2', ' (Doc 2)')
+    # Melt for plotting
+    melted_df = pd.melt(df_cinema, id_vars=['Title'], value_vars=columns_to_compare, var_name='Metric', value_name='Value')
     
-    # Plot
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=melted_df, x='Metric', y='Value', hue='Metric')
-    plt.title(f'Comparazione per {cinema_name}')
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='Title', y='Value', hue='Metric', data=melted_df)
+    plt.title(f'Comparison for {cinema_name}')
     plt.xticks(rotation=45)
-    plt.xlabel('Metrica')
-    plt.ylabel('Valore')
-    plt.legend(title=cinema_name, bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.xlabel('Title')
+    plt.ylabel('Value')
     plt.tight_layout()
     
-    # Mostra il grafico in Streamlit
     st.pyplot(plt)
 
 def main():
-    # Caricamento dei dati, esempio con due DataFrame df1 e df2
+    st.title("Data Comparison Across Cinemas")
     
-    # Generazione del DataFrame di confronto
-    # comparison_df = prepare_comparison_data(df1, df2, columns_to_compare)
+    file1 = st.file_uploader("Upload first Excel file", type="xlsx", key="file1")
+    file2 = st.file_uploader("Upload second Excel file", type="xlsx", key="file2")
     
-    # Selezione del cinema
-    unique_cinemas = comparison_df['Cinema'].unique()
-    selected_cinema = st.selectbox('Seleziona il Cinema:', unique_cinemas)
-    
-    # Plot per il cinema selezionato
-    plot_cinema_comparison(comparison_df, selected_cinema, columns_to_compare)
+    if file1 and file2:
+        df1 = pd.read_excel(file1)
+        df2 = pd.read_excel(file2)
+        
+        comparison_df = prepare_comparison_data(df1, df2)
+        
+        if not comparison_df.empty:
+            cinemas = comparison_df['Cinema'].unique()
+            selected_cinema = st.selectbox("Select a Cinema to Compare", options=cinemas)
+            
+            plot_cinema_comparison(comparison_df, selected_cinema)
+        else:
+            st.write("No data to display. Please ensure the files have matching 'Cinema', 'LV', 'Title' with different 'Start Dates'.")
 
 if __name__ == "__main__":
     main()
