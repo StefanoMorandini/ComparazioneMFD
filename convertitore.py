@@ -30,8 +30,8 @@ def plot_cinema_comparison(comparison_df, cinema_name, selected_metric):
 def main():
     st.title("Data Comparison Across Cinemas")
     
-    file1 = st.file_uploader("Upload first Excel file", type="xlsx", key="file1")
-    file2 = st.file_uploader("Upload second Excel file", type="xlsx", key="file2")
+    file1 = st.file_uploader("Upload first Excel file Week1", type="xlsx", key="file1")
+    file2 = st.file_uploader("Upload second Excel file Week 2", type="xlsx", key="file2")
     
     if file1 and file2:
         df1 = pd.read_excel(file1)
