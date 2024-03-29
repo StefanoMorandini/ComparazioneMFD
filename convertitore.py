@@ -14,12 +14,19 @@ def prepare_comparison_data(df1, df2, columns_to_compare):
     return comparison_df
 
 # Function to plot the comparison
+# Function to plot the comparison
 def plot_comparison(comparison_df, columns_to_compare):
-    # Melting the dataframe for easy plotting with seaborn
-    comparison_melted = comparison_df.melt(id_vars=['Cinema', 'LV', 'Title'], value_vars=columns_to_compare, 
-                                           var_name='Metric', value_name='Value')
+    # Ensure we only include columns that exist in comparison_df for melting
+    existing_columns = [col for col in columns_to_compare if f'{col}_df1' in comparison_df.columns and f'{col}_df2' in comparison_df.columns]
+    value_vars = [f'{col}_df1' for col in existing_columns] + [f'{col}_df2' for col in existing_columns]
+
+    # Debug: Print or inspect existing columns to ensure correctness
+    print("Existing Columns for Comparison:", existing_columns)
+
+    # Adjusting the melt function accordingly
+    comparison_melted = comparison_df.melt(id_vars=['Cinema', 'LV', 'Title'], value_vars=value_vars, var_name='Metric', value_name='Value')
     
-    # Plotting with seaborn
+    # Assuming the rest of the plotting function remains the same...
     plt.figure(figsize=(10, 6))
     sns.barplot(data=comparison_melted, x='Metric', y='Value', hue='Cinema')
     plt.title('Comparison of Metrics between Two Documents')
@@ -27,6 +34,7 @@ def plot_comparison(comparison_df, columns_to_compare):
     plt.legend(title='Cinema')
     plt.tight_layout()
     st.pyplot(plt)
+
 
 # Main function for Streamlit app
 def main():
