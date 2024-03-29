@@ -27,6 +27,39 @@ def plot_cinema_comparison(comparison_df, cinema_name, selected_metric):
     
     st.pyplot(plt)
 
+def plot_overview_comparison(comparison_df, cinema_name):
+    # Filtra il DataFrame per il cinema selezionato
+    df_cinema = comparison_df[comparison_df['Cinema'] == cinema_name]
+
+    # Lista delle colonne di interesse
+    columns_to_plot = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue', 'Adm. Wedn']
+
+    # Melt il DataFrame per adattarlo al plotting
+    melted_df = pd.melt(df_cinema, id_vars=['Title'], value_vars=[col + '_df1' for col in columns_to_plot] + [col + '_df2' for col in columns_to_plot],
+                        var_name='Day', value_name='Admissions')
+    
+    # Aggiusta il nome della metrica per il titolo del grafico
+    melted_df['Day'] = melted_df['Day'].str.replace('_df1', ' (Doc 1)').str.replace('_df2', ' (Doc 2)')
+    
+    plt.figure(figsize=(12, 6))
+    chart = sns.barplot(x='Day', y='Admissions', hue='Title', data=melted_df)
+    plt.title(f'Weekly Admissions Overview for {cinema_name}')
+    plt.xticks(rotation=45)
+    plt.xlabel('Day of the Week')
+    plt.ylabel('Number of Admissions')
+
+    # Aggiungi i valori assoluti sopra ogni barra
+    for p in chart.patches:
+        chart.annotate(format(p.get_height(), '.1f'), 
+                       (p.get_x() + p.get_width() / 2., p.get_height()), 
+                       ha = 'center', va = 'center', 
+                       xytext = (0, 9), 
+                       textcoords = 'offset points')
+    
+    plt.tight_layout()
+    st.pyplot(plt)
+
+
 def main():
     st.title("Data Comparison Across Cinemas")
     
@@ -51,6 +84,8 @@ def main():
             plot_cinema_comparison(comparison_df, selected_cinema, selected_metric)
         else:
             st.write("No data to display. Please ensure the files have matching 'Cinema', 'LV', 'Title' with different 'Start Dates'.")
+
+
 
 if __name__ == "__main__":
     main()
