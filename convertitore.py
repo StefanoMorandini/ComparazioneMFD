@@ -3,66 +3,48 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Function to prepare the data for comparison
-def prepare_comparison_data(df1, df2, columns_to_compare):
-    # Merge the dataframes based on 'Cinema', 'LV', and 'Title'
-    comparison_df = pd.merge(df1, df2, on=['Cinema', 'LV', 'Title'], suffixes=('_df1', '_df2'))
+# Assumi che `comparison_df` sia il tuo DataFrame già preparato
+# comparison_df = prepare_comparison_data(df1, df2, columns_to_compare) 
 
-    # Filter out rows with the same 'Start Date'
-    comparison_df = comparison_df[comparison_df['Start Date_df1'] != comparison_df['Start Date_df2']]
-
-    return comparison_df
-
-# Function to plot the comparison
-# Function to plot the comparison
-def plot_comparison(comparison_df, columns_to_compare):
-    # Ensure we only include columns that exist in comparison_df for melting
-    existing_columns = [col for col in columns_to_compare if f'{col}_df1' in comparison_df.columns and f'{col}_df2' in comparison_df.columns]
-    value_vars = [f'{col}_df1' for col in existing_columns] + [f'{col}_df2' for col in existing_columns]
-
-    # Debug: Print or inspect existing columns to ensure correctness
-    print("Existing Columns for Comparison:", existing_columns)
-
-    # Adjusting the melt function accordingly
-    comparison_melted = comparison_df.melt(id_vars=['Cinema', 'LV', 'Title'], value_vars=value_vars, var_name='Metric', value_name='Value')
+def plot_cinema_comparison(comparison_df, cinema_name, columns_to_compare):
+    # Filtra il dataframe per il cinema selezionato
+    df_cinema = comparison_df[comparison_df['Cinema'] == cinema_name]
     
-    # Assuming the rest of the plotting function remains the same...
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=comparison_melted, x='Metric', y='Value', hue='Cinema')
-    plt.title('Comparison of Metrics between Two Documents')
+    # Prepara i dati per il plotting
+    # Assicurati che il DataFrame sia organizzato per permettere un confronto efficace
+    melted_df = df_cinema.melt(id_vars=['Cinema', 'LV', 'Title', 'Start Date_df1', 'Start Date_df2'],
+                               value_vars=[col + suffix for col in columns_to_compare for suffix in ['_df1', '_df2']],
+                               var_name='Metric', value_name='Value')
+    
+    # Sostituisci i suffissi '_df1' e '_df2' per chiarezza nel grafico
+    melted_df['Metric'] = melted_df['Metric'].str.replace('_df1', ' (Doc 1)').str.replace('_df2', ' (Doc 2)')
+    
+    # Plot
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=melted_df, x='Metric', y='Value', hue='Metric')
+    plt.title(f'Comparazione per {cinema_name}')
     plt.xticks(rotation=45)
-    plt.legend(title='Cinema')
+    plt.xlabel('Metrica')
+    plt.ylabel('Valore')
+    plt.legend(title=cinema_name, bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
+    
+    # Mostra il grafico in Streamlit
     st.pyplot(plt)
 
-
-# Main function for Streamlit app
 def main():
-    st.title("Data Comparison Tool")
+    # Caricamento dei dati, esempio con due DataFrame df1 e df2
+    
+    # Generazione del DataFrame di confronto
+    # comparison_df = prepare_comparison_data(df1, df2, columns_to_compare)
+    
+    # Selezione del cinema
+    unique_cinemas = comparison_df['Cinema'].unique()
+    selected_cinema = st.selectbox('Seleziona il Cinema:', unique_cinemas)
+    
+    # Plot per il cinema selezionato
+    plot_cinema_comparison(comparison_df, selected_cinema, columns_to_compare)
 
-    # Uploading the first file
-    file1 = st.file_uploader("Upload the first Excel file", type=["xlsx"], key="file1")
-    # Uploading the second file
-    file2 = st.file_uploader("Upload the second Excel file", type=["xlsx"], key="file2")
-
-    # The columns to compare
-    columns_to_compare = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Weekend',
-                          'Adm. Mon', 'Adm. Tue', 'Adm. Wedn', 'Adm. Week', 'Adm. Comp. Week']
-
-    if file1 and file2:
-        # Read the data into two separate DataFrames
-        df1 = pd.read_excel(file1)
-        df2 = pd.read_excel(file2)
-
-        # Ensure the columns exist in both DataFrames
-        columns_to_compare = [col for col in columns_to_compare if col in df1.columns and col in df2.columns]
-
-        # Prepare the data for comparison
-        comparison_df = prepare_comparison_data(df1, df2, columns_to_compare)
-
-        # Display the comparison using a bar chart
-        plot_comparison(comparison_df, columns_to_compare)
-
-# Run the main function
 if __name__ == "__main__":
     main()
+
