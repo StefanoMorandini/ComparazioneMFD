@@ -1,1 +1,9 @@
-
+matplotlib
+streamlit
+pandas
+matplotlib
+pandas
+matplotlib
+Pillow
+openpyxl
+fpdf2
