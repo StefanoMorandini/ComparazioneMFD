@@ -3,63 +3,58 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Definizione delle colonne per il confronto
-columns_to_compare = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Weekend',
-                      'Adm. Mon', 'Adm. Tue', 'Adm. Wedn', 'Adm. Week', 'Adm. Comp. Week']
+# Function to prepare the data for comparison
+def prepare_comparison_data(df1, df2, columns_to_compare):
+    # Merge the dataframes based on 'Cinema', 'LV', and 'Title'
+    comparison_df = pd.merge(df1, df2, on=['Cinema', 'LV', 'Title'], suffixes=('_df1', '_df2'))
 
-# Funzione per preparare il dataframe per il confronto
-def prepare_comparison_data(df1, df2):
-    # Filtriamo solo le colonne rilevanti e rimuoviamo le date di fine
-    df1_comp = df1[['Cinema', 'Start Date', 'Title', 'LV'] + columns_to_compare]
-    df2_comp = df2[['Cinema', 'Start Date', 'Title', 'LV'] + columns_to_compare]
-    
-    # Uniamo i due dataframe
-    merged_df = pd.merge(df1_comp, df2_comp, on=['Cinema', 'Title', 'LV'], suffixes=('_1', '_2'))
-    
-    # Manteniamo solo le righe con start date differenti
-    comparison_df = merged_df[merged_df['Start Date_1'] != merged_df['Start Date_2']]
-    
+    # Filter out rows with the same 'Start Date'
+    comparison_df = comparison_df[comparison_df['Start Date_df1'] != comparison_df['Start Date_df2']]
+
     return comparison_df
 
-# Funzione per visualizzare il confronto in un grafico a barre
-def plot_comparison(comparison_df):
-    # Fondere le righe per avere una differenziazione chiara nel grafico
-    comparison_df = pd.melt(comparison_df, id_vars=['Cinema', 'Title', 'LV'], 
-                            value_vars=[col + '_1' for col in columns_to_compare] + [col + '_2' for col in columns_to_compare], 
-                            var_name='Measurement', value_name='Value')
+# Function to plot the comparison
+def plot_comparison(comparison_df, columns_to_compare):
+    # Melting the dataframe for easy plotting with seaborn
+    comparison_melted = comparison_df.melt(id_vars=['Cinema', 'LV', 'Title'], value_vars=columns_to_compare, 
+                                           var_name='Metric', value_name='Value')
     
-    # Grafico a barre
+    # Plotting with seaborn
     plt.figure(figsize=(10, 6))
-    sns.barplot(data=comparison_df, x='Measurement', y='Value', hue='Cinema')
-    plt.xticks(rotation=90)
+    sns.barplot(data=comparison_melted, x='Metric', y='Value', hue='Cinema')
+    plt.title('Comparison of Metrics between Two Documents')
+    plt.xticks(rotation=45)
+    plt.legend(title='Cinema')
     plt.tight_layout()
     st.pyplot(plt)
 
-# Funzione principale dell'app Streamlit
+# Main function for Streamlit app
 def main():
-    st.title("Confronto Dati di Cinema")
+    st.title("Data Comparison Tool")
 
-    # Caricamento dei file
-    uploaded_file_1 = st.file_uploader("Carica il primo file Excel", type=["xlsx"], key="file1")
-    uploaded_file_2 = st.file_uploader("Carica il secondo file Excel", type=["xlsx"], key="file2")
-    
-    # Verifichiamo se entrambi i file sono stati caricati
-    if uploaded_file_1 and uploaded_file_2:
-        # Lettura dei dati dai file
-        data1 = pd.read_excel(uploaded_file_1)
-        data2 = pd.read_excel(uploaded_file_2)
-        
-        # Prepariamo i dati per il confronto
-        comparison_df = prepare_comparison_data(data1, data2)
-        
-        # Mostra un messaggio se non ci sono righe da confrontare
-        if comparison_df.empty:
-            st.write("Non ci sono elementi da confrontare con le date di inizio diverse.")
-        else:
-            # Altrimenti, visualizziamo il confronto
-            st.write("Confronto dei dati:")
-            plot_comparison(comparison_df)
+    # Uploading the first file
+    file1 = st.file_uploader("Upload the first Excel file", type=["xlsx"], key="file1")
+    # Uploading the second file
+    file2 = st.file_uploader("Upload the second Excel file", type=["xlsx"], key="file2")
 
-# Esecuzione della funzione principale
+    # The columns to compare
+    columns_to_compare = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Weekend',
+                          'Adm. Mon', 'Adm. Tue', 'Adm. Wedn', 'Adm. Week', 'Adm. Comp. Week']
+
+    if file1 and file2:
+        # Read the data into two separate DataFrames
+        df1 = pd.read_excel(file1)
+        df2 = pd.read_excel(file2)
+
+        # Ensure the columns exist in both DataFrames
+        columns_to_compare = [col for col in columns_to_compare if col in df1.columns and col in df2.columns]
+
+        # Prepare the data for comparison
+        comparison_df = prepare_comparison_data(df1, df2, columns_to_compare)
+
+        # Display the comparison using a bar chart
+        plot_comparison(comparison_df, columns_to_compare)
+
+# Run the main function
 if __name__ == "__main__":
     main()
