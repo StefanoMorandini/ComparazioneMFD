@@ -118,6 +118,10 @@ with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
     df_to_image(comparison_df, tmp_file.name)
     st.markdown(get_image_download_link(tmp_file.name, 'Comparazione_Cinema_Settimana_{input_date1}.png'), unsafe_allow_html=True)
 
+with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+    df_to_image(processed_data1, tmp_file.name)
+    st.markdown(get_image_download_link(tmp_file.name, 'Risultati_byDay_ Cinema_Sett_{input_date1}.png'), unsafe_allow_html=True)
+
 
 
 
