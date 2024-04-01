@@ -133,6 +133,42 @@ with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
     st.markdown(get_image_download_link(tmp_file.name, 'Risultati_byDay_ Cinema_Sett_base.png'), unsafe_allow_html=True)
 
 
+def compare_weekend_columns(df1, df2):
+    # Ensure both dataframes are aligned
+    df1, df2 = df1.align(df2, join='inner', axis=0)
+    
+    # Define the weekend days to compare
+    weekend_days = ['Friday', 'Saturday', 'Sunday']
+    
+    # Filter the dataframes to include only the weekend columns
+    df1_weekend = df1[weekend_days]
+    df2_weekend = df2[weekend_days]
+    
+    # Initialize the comparison results dataframe
+    comparison_results_weekend = pd.DataFrame(index=df1.index)
+    
+    # Perform the comparison for each weekend day
+    for day in weekend_days:
+        comparison_results_weekend[f'{day}_diff'] = df1_weekend[day] - df2_weekend[day]
+    
+    # Add a sum column for the weekend
+    comparison_results_weekend['Weekend_Sum'] = comparison_results_weekend.sum(axis=1)
+    
+    return comparison_results_weekend
+
+# Assuming processed_data1 and processed_data2 are your input DataFrames
+if not processed_data1.empty and not processed_data2.empty:
+    comparison_weekend_df = compare_weekend_columns(processed_data1, processed_data2)
+
+    if not comparison_weekend_df.empty:
+        st.write("Comparison Results for the Weekend", comparison_weekend_df)
+        # Further code for downloading or displaying the results...
+    else:
+        st.error("No comparison results to display for the weekend.")
+else:
+    st.error("DataFrames are empty or not properly loaded.")
+
+
 
 
 
