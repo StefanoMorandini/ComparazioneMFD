@@ -179,6 +179,31 @@ else:
     st.error("DataFrames are empty or not properly loaded.")
 
 
+def create_region_totals_df(df):
+    if 'L.R.' not in df.columns:
+        st.error("The DataFrame does not contain 'L.R.' column.")
+        return pd.DataFrame()
+    
+    day_columns = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    columns_of_interest = ['L.R.'] + day_columns
+    df_filtered = df[columns_of_interest]
+    df_totals = df_filtered.groupby('L.R.').sum()
+    df_totals['Total'] = df_totals.sum(axis=1)
+    
+    return df_totals
 
+if uploaded_file1:
+    input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
+    processed_data1 = process_file(uploaded_file1, input_date1)
+    
+    if not processed_data1.empty:
+        region_totals_df = create_region_totals_df(processed_data1)
+        
+        if not region_totals_df.empty:
+            st.write("Totals for each L.R. from the first document", region_totals_df)
+        else:
+            st.error("No L.R. totals to display.")
+else:
+    st.error("Please upload the first document.")
 
 
