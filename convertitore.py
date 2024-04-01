@@ -2,15 +2,25 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 
-def rename_columns_based_on_input_date(df, input_date):
-    current_date = pd.to_datetime(input_date)
-    adm_days = ['Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue']
-    rename_dict = {}
-    for i, day in enumerate(adm_days):
-        adm_col_name = f"Adm {day.lower()}"  # Adjust based on actual column names
-        if adm_col_name in df.columns:
-            rename_dict[adm_col_name] = (current_date + timedelta(days=i)).strftime('%d/%m/%Y')
-    return df.rename(columns=rename_dict)
+from datetime import timedelta
+import pandas as pd
+
+# Given DataFrame df with specific 'Adm' columns
+# Example input date
+input_date = pd.to_datetime('2023-04-01')
+
+# Columns you want to rename based on the input date
+original_columns = ['Adm. Wed', 'Amd. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
+
+# Create a dictionary mapping old column names to new names based on the input date
+rename_dict = {}
+for i, col in enumerate(original_columns):
+    new_name = (input_date + timedelta(days=i)).strftime('%Y-%m-%d')
+    rename_dict[col] = new_name
+
+# Rename the columns in the DataFrame
+df.rename(columns=rename_dict, inplace=True)
+
 
 import streamlit as st
 from datetime import date
