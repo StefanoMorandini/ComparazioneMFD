@@ -36,6 +36,13 @@ def process_file(file, input_date):
         return pd.DataFrame()
     return df
 
+def compare_numeric_columns(df1, df2):
+    df1, df2 = df1.align(df2, join='inner', axis=0)
+    comparison_results = pd.DataFrame(index=df1.index)
+    for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
+        comparison_results[f'{col}_diff'] = df1[col] - df2[col]
+    return comparison_results
+
 # Function to dynamically get unique L.R. values from a file
 def get_unique_lr_values(file):
     df_temp = pd.read_excel(file)
@@ -49,31 +56,31 @@ st.title('Comparazione andamento cinema di settimana in settimana')
 uploaded_file1 = st.file_uploader("Choose the first Excel file", type=['xlsx'], key='file1')
 uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'], key='file2')
 
-if uploaded_file1 and uploaded_file2:
-    lr_values1 = get_unique_lr_values(uploaded_file1)
-    lr_values2 = get_unique_lr_values(uploaded_file2)
-    all_lr_values = sorted(set(lr_values1 + lr_values2))
-
-    selected_lr = st.selectbox('Seleziona il valore di L.R. per filtrare i risultati:', ['Tutti'] + all_lr_values)
-
-    input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
-    input_date2 = st.date_input("Seleziona il mercoledì della settimana con cui vuoi comparare i risultati:", value=pd.to_datetime('today'), key='date2')
-
+if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     processed_data1 = process_file(uploaded_file1, input_date1)
     processed_data2 = process_file(uploaded_file2, input_date2)
     
-    # Apply L.R. filtering if something other than 'Tutti' is selected
-    if selected_lr != 'Tutti':
-        processed_data1 = processed_data1[processed_data1['L.R.'] == selected_lr] if 'L.R.' in processed_data1.columns else processed_data1
-        processed_data2 = processed_data2[processed_data2['L.R.'] == selected_lr] if 'L.R.' in processed_data2.columns else processed_data2
-
-    week_start = input_date1.strftime('%d/%m/%Y')
-    week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
-    results_title = f"Risultati della settimana dal {week_start} al {week_end}"
-    
-    st.subheader(results_title)
-    st.write("Risultati della settimana base", processed_data1)
-    st.write("Risultati della settimana di riferimento", processed_data2)
+    # Ensure 'processed_data1' and 'processed_data2' exist and are not empty
+    if not processed_data1.empty and not processed_data2.empty:
+        # Perform the comparison and store the results in 'comparison_df'
+        comparison_df = compare_numeric_columns(processed_data1.drop(index='Total', errors='ignore'), processed_data2.drop(index='Total', errors='ignore'))
+        
+        # Now check if 'comparison_df' is created and not empty before proceeding
+        if not comparison_df.empty:
+            week_start = input_date1.strftime('%d/%m/%Y')
+            week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
+            results_title = f"Risultati della settimana dal {week_start} al {week_end}"
+            
+            # Use the 'df_to_image' function to create an image from 'comparison_df'
+            with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+                df_to_image(comparison_df, tmp_file.name, title=results_title)
+                st.markdown(get_image_download_link(tmp_file.name, 'comparison_data.png'), unsafe_allow_html=True)
+        else:
+            st.error("Comparison DataFrame is empty.")
+    else:
+        st.error("One or both of the processed DataFrames are empty.")
+else:
+    st.error("Please upload both files and select start dates for each.")
 
 if 'comparison_df' in locals() or 'comparison_df' in globals():
     if not comparison_df.empty:
