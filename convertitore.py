@@ -1,14 +1,14 @@
 import streamlit as st
 import pandas as pd
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 def rename_columns_based_on_input_date(df, input_date):
     days_of_week = ['Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday']
     for i, day in enumerate(days_of_week):
-        new_name = day
-        col_name = f"Adm. {day[:3]}"  # Adjust based on your column naming convention
-        if col_name in df.columns:
-            df.rename(columns={col_name: new_name}, inplace=True)
+        # Calculate date for each day of the week based on input_date
+        col_date = input_date + timedelta(days=i)
+        col_name = day  # Use day name directly as column name
+        df.rename(columns={f"Adm. {days_of_week[i][:3]}": col_name}, inplace=True)
     return df
 
 def process_file(file, input_date):
@@ -18,10 +18,10 @@ def process_file(file, input_date):
     df = rename_columns_based_on_input_date(df, pd.to_datetime(input_date))
     
     if 'Cinema' in df.columns:
-        df['Sum of Renamed Columns'] = df.select_dtypes(include=['number']).sum(axis=1)
-        grouped_df = df.groupby('Cinema').sum()
-        totals = grouped_df.sum(numeric_only=True).rename('Total')
-        grouped_df = grouped_df.append(totals)
+        df = df.groupby('Cinema').sum()  # Group and sum numerical columns
+        # Append a 'Total' row
+        totals = df.sum().rename('Total')
+        grouped_df = pd.concat([df, pd.DataFrame([totals], index=['Total'])])
     else:
         st.error("'Cinema' column not found. Please check your file.")
         return pd.DataFrame()
@@ -35,15 +35,11 @@ def compare_numeric_columns(df1, df2):
         if col in df2.columns:
             comparison_results[f'{col}_diff'] = df1[col] - df2[col]
     return comparison_results
+
 st.title('Cinema Data Processor with Date Selection and Aggregated Comparison')
 
-input_date1 = st.date_input("Select the start date for renaming 'Adm' columns for the first file:", value=pd.to_datetime('today'), key='date1')
-uploaded_file1 = st.file_uploader("Choose the first Excel file", type=['xlsx'], key='file1')
+# User input handling for dates and file uploads
 
-input_date2 = st.date_input("Select the start date for renaming 'Adm' columns for the second file:", value=pd.to_datetime('today'), key='date2')
-uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'], key='file2')
-
-# Process the files if both are uploaded and input dates are selected
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     processed_data1 = process_file(uploaded_file1, input_date1)
     processed_data2 = process_file(uploaded_file2, input_date2)
@@ -55,7 +51,7 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     if not processed_data1.empty and not processed_data2.empty:
         st.subheader(results_title)
         comparison_df = compare_numeric_columns(processed_data1.drop('Total'), processed_data2.drop('Total'))
-
+        
         if not comparison_df.empty:
             st.write("Comparison Results", comparison_df)
             csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
@@ -66,6 +62,9 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
         st.error("One or both of the files did not process correctly.")
 else:
     st.error("Please upload both files and select start dates for each.")
+
+
+
 
 
 
