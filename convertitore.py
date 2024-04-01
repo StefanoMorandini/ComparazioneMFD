@@ -82,8 +82,8 @@ if uploaded_file2 is not None and input_date2:
 def compare_numeric_columns(df1, df2):
     # Ensure the indices of df1 and df2 match; adjust if necessary
     # Assuming 'Cinema' is the index for both DataFrames
-    # df1.set_index('Cinema', inplace=True)
-    # df2.set_index('Cinema', inplace=True)
+    df1.set_index('Cinema', inplace=True)
+    df2.set_index('Cinema', inplace=True)
 
     # Initialize an empty DataFrame for the comparison results
     comparison_df = pd.DataFrame(index=df1.index)
