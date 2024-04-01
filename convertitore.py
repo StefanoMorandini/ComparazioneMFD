@@ -10,30 +10,36 @@ def process_file(file):
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week']
     df = df.drop(columns=[col for col in df.columns if 'Box' in col or col in columns_to_drop], errors='ignore')
     
-    # Convert 'Start Date' to datetime and find the most frequent start date if present
+    # Assuming 'Start Date' column is present and used for identifying the week sequence
     if 'Start Date' in df.columns:
         df['Start Date'] = pd.to_datetime(df['Start Date'])
-        most_frequent_start_date = df['Start Date'].mode()[0]  # Get the most common start date
-        formatted_date = most_frequent_start_date.strftime('%d/%m/%Y')  # Format date
         
-        # Replace 'Adm' in column names with the formatted date
-        df = df.rename(columns=lambda x: x.replace('Adm', formatted_date) if 'Adm' in x else x)
+        # Ensure all dates are shifted to start the week on Wednesday
+        # Note: This step needs clarity. Assuming we use the most frequent 'Start Date' for column renaming
+        most_frequent_start_date = df['Start Date'].mode()[0]
+        formatted_dates = most_frequent_start_date.strftime('%d/%m/%Y')
+        
+        # Rename 'Adm' columns to formatted dates
+        df = df.rename(columns=lambda x: x.replace('Adm', formatted_dates) if 'Adm' in x else x)
 
-    # Drop 'Start Date' and 'End Date' as they are no longer needed
+    # Drop 'Start Date' and 'End Date'
     df = df.drop(columns=['Start Date', 'End Date'], errors='ignore')
     
-    # Convert columns to numeric where applicable
+    # Convert columns to numeric for pivot operation
     for col in df.columns:
         if col not in ['Cinema', 'Title'] and df[col].dtype == 'object':
-            df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert to numeric, coerce errors to NaN
+            df[col] = pd.to_numeric(df[col], errors='coerce')
     
-    # Creating the pivot table
+    # Create the pivot table
     if 'Cinema' in df.columns and 'Title' in df.columns:
-        # Exclude 'Cinema' and 'Title' from the pivot values
         pivot_columns = [col for col in df.columns if col not in ['Cinema', 'Title']]
         
         if pivot_columns:
             df_pivot = pd.pivot_table(df, values=pivot_columns, index=['Cinema', 'Title'], aggfunc=np.sum)
+            
+            # Sort the columns by weekday, starting with Wednesday
+            df_pivot = df_pivot.reindex(sorted(df_pivot.columns, key=lambda x: (pd.to_datetime(x, format='%d/%m/%Y').weekday() + 2) % 7), axis=1)
+            
             return df_pivot
         else:
             st.error("No suitable columns found for pivoting.")
@@ -42,7 +48,7 @@ def process_file(file):
         st.error("Essential columns for pivoting ('Cinema' or 'Title') are missing.")
         return pd.DataFrame()
 
-# Streamlit UI
+# Streamlit UI setup
 st.title('Cinema Data Processor')
 
 uploaded_file = st.file_uploader("Choose an Excel file", type=['xlsx'])
@@ -63,3 +69,4 @@ if uploaded_file is not None:
         )
     else:
         st.error("Processing failed. Please ensure the file is correctly formatted.")
+
