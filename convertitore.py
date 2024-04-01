@@ -31,7 +31,7 @@ def process_file(file, input_date):
     return df_pivot
 
 # Streamlit UI setup
-st.title('Cinema Data Processor with Date Selection')
+st.title('Comparing Analysis')
 
 # First file uploader
 input_date1 = st.date_input("Select the start date for renaming 'Adm' columns for the first file:", value=pd.to_datetime('today'), key='date1')
