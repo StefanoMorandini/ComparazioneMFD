@@ -85,6 +85,8 @@ else:
 import matplotlib.pyplot as plt
 from pandas.plotting import table
 import pandas as pd
+import base64
+
 
 def df_to_image(df, filename='dataframe.png'):
     fig, ax = plt.subplots(figsize=(df.shape[1], df.shape[0]))  # Adjust figure size
