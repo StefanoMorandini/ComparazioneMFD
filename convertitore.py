@@ -2,29 +2,34 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+def rename_columns_based_on_date_sequence(df, start_date):
+    # Create a dictionary mapping old column names to new names with dates
+    rename_dict = {}
+    current_date = start_date
+    # Assume columns follow a specific order and rename accordingly
+    for col in df.columns:
+        if "Adm" in col:
+            rename_dict[col] = current_date.strftime('%d/%m/%Y')
+            current_date += timedelta(days=1)  # Move to the next day
+    return df.rename(columns=rename_dict)
+
 def process_file(file):
-    # Read the Excel file
     df = pd.read_excel(file)
     
-    # Drop the specified columns including any 'Box' related columns
+    # Drop specified columns, including any 'Box' related columns
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week']
     df = df.drop(columns=[col for col in df.columns if 'Box' in col or col in columns_to_drop], errors='ignore')
     
-    # Check if 'Start Date' column is present for date manipulation
+    # Check for 'Start Date' column and proceed with renaming
     if 'Start Date' in df.columns:
         df['Start Date'] = pd.to_datetime(df['Start Date'])
-        most_frequent_start_date = df['Start Date'].mode()[0]  # Get the most common start date
-        formatted_date = most_frequent_start_date.strftime('%d/%m/%Y')  # Format date
-        # Replace 'Adm' in column names with the formatted date
-        df = df.rename(columns=lambda x: x.replace('Adm', formatted_date) if 'Adm' in x else x)
-
+        # Use the most frequent 'Start Date' as the basis for renaming
+        most_frequent_start_date = df['Start Date'].mode()[0]
+        df = rename_columns_based_on_date_sequence(df, most_frequent_start_date)
+    
     # Drop 'Start Date' and 'End Date' after processing
     df = df.drop(columns=['Start Date', 'End Date'], errors='ignore')
-    
-    # Convert columns to numeric where applicable for the pivot table operation
-    for col in df.columns:
-        if col not in ['Cinema', 'Title'] and df[col].dtype == 'object':
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+
     
     # Create the pivot table
     if 'Cinema' in df.columns and 'Title' in df.columns:
