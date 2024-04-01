@@ -75,6 +75,18 @@ if uploaded_file1 and uploaded_file2:
     st.write("Risultati della settimana base", processed_data1)
     st.write("Risultati della settimana di riferimento", processed_data2)
 
+if 'comparison_df' in locals() or 'comparison_df' in globals():
+    if not comparison_df.empty:
+        # Your code to generate and download the image
+        with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+            df_to_image(comparison_df, tmp_file.name, title=title)
+            st.markdown(get_image_download_link(tmp_file.name, f'Comparazione_Cinema_Settimana_{input_date1}.png'), unsafe_allow_html=True)
+    else:
+        st.error("The comparison DataFrame is empty.")
+else:
+    st.error("The comparison DataFrame does not exist.")
+
+
 
 
 import pandas as pd
