@@ -109,7 +109,7 @@ def get_image_download_link(img_path, filename='dataframe.png'):
 st.title('Download Comparazione as PNG')
 
 # Displaying the DataFrame in the app for reference
-st.write("Sample DataFrame:", df_sample)
+st.write("Sample DataFrame:", comparison_df)
 
 # Convert DataFrame to image and create a temporary file for download
 with NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
