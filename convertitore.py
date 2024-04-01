@@ -12,6 +12,15 @@ def rename_columns_based_on_input_date(df, input_date):
             rename_dict[adm_col_name] = (current_date + timedelta(days=i)).strftime('%d/%m/%Y')
     return df.rename(columns=rename_dict)
 
+import streamlit as st
+from datetime import date
+
+# Display a date input widget and get the selected date
+input_date = st.date_input("Select a date:", date.today())
+
+st.write("You selected:", input_date)
+
+
 def create_pivot_table(df):
     
     pivot_columns = [col for col in df.columns if pd.to_datetime(col, format='%d/%m/%Y', errors='coerce') is not pd.NaT and col not in ['Cinema', 'Title']]
@@ -26,7 +35,7 @@ def process_file(file, input_date):
     df = pd.read_excel(file)
     
     # Initial preprocessing
-    columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week']
+    columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week', 'Adm. Wedn']
     df = df.drop(columns=[col for col in df.columns if col in columns_to_drop or 'Box' in col], errors='ignore')
     df.set_index('Cinema', inplace=True)
 
