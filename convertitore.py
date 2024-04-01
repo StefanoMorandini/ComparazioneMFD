@@ -79,54 +79,40 @@ if uploaded_file2 is not None and input_date2:
 
 
 
-import streamlit as st
-import pandas as pd
+def compare_numeric_columns(df1, df2):
+    # Ensure the indices of df1 and df2 match; adjust if necessary
+    # Assuming 'Cinema' is the index for both DataFrames
+    # df1.set_index('Cinema', inplace=True)
+    # df2.set_index('Cinema', inplace=True)
 
-# Assuming process_file() function is defined as before
-# and returns a DataFrame with only numerical columns for comparison
+    # Initialize an empty DataFrame for the comparison results
+    comparison_df = pd.DataFrame(index=df1.index)
 
-def compare_dataframes(df1, df2):
-    # Ensure both DataFrames have the same structure for comparison
-    if len(df1.columns) != len(df2.columns):
-        st.error("The DataFrames have different numbers of columns and cannot be compared directly.")
-        return pd.DataFrame()
-    
-    comparison_results = []
-    for col in range(len(df1.columns)):
-        # Check if columns are numeric for both DataFrames
-        if pd.api.types.is_numeric_dtype(df1.iloc[:, col]) and pd.api.types.is_numeric_dtype(df2.iloc[:, col]):
-            # Perform the desired comparison, e.g., difference
-            column_comparison = df1.iloc[:, col] - df2.iloc[:, col]
-        else:
-            # For non-numeric columns, place a placeholder or handle as needed
-            column_comparison = pd.Series([None] * len(df1), name=df1.columns[col])
-        comparison_results.append(column_comparison)
-    
-    # Create a new DataFrame with the comparison results
-    comparison_df = pd.concat(comparison_results, axis=1)
-    comparison_df.columns = df1.columns  # Set column names based on the first DataFrame
+    # Iterate through the columns in df1
+    for col in df1.columns:
+        if df1[col].dtype in ['int64', 'float64'] and col in df2.columns and df2[col].dtype in ['int64', 'float64']:
+            # Ensure only to compare rows where non-numeric data match
+            # This step assumes there's a way to identify non-numeric columns; here we check column data types directly
+            mask = (df1.select_dtypes(exclude=['int64', 'float64']) == df2.select_dtypes(exclude=['int64', 'float64'])).all(axis=1)
+            comparison_df[col] = None  # Initialize the column in the comparison DataFrame
+            comparison_df.loc[mask, col] = df1.loc[mask, col] - df2.loc[mask, col]  # Compute the difference for matching rows
+
     return comparison_df
 
-# Streamlit UI and file processing setup remains the same
-
-# After processing both files:
+# Assuming df1 and df2 are your DataFrames after processing
 if uploaded_file1 is not None and uploaded_file2 is not None:
     processed_data1 = process_file(uploaded_file1, input_date1)
     processed_data2 = process_file(uploaded_file2, input_date2)
     
-    # Assuming both files have been processed and are ready for comparison
-    comparison_df = compare_dataframes(processed_data1, processed_data2)
+    # Comparing the DataFrames
+    comparison_df = compare_numeric_columns(processed_data1, processed_data2)
     
+    # Displaying and allowing download of the comparison DataFrame
     if not comparison_df.empty:
-        st.write("Comparison of DataFrames", comparison_df)
-        
-        # Option to download the comparison DataFrame as CSV
-        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
-        st.download_button(
-            "Download comparison data as CSV",
-            data=csv_comparison,
-            file_name='comparison_data.csv',
-            mime='text/csv'
-        )
+        st.write("Comparison Results", comparison_df)
+        csv_comparison = comparison_df.to_csv().encode('utf-8')
+        st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
+    else:
+        st.error("No comparison results to display.")
 
 
