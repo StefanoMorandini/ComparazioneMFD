@@ -73,6 +73,20 @@ def get_unique_lr_values(file):
     return []
 
 
+def find_new_entries(df1, df2):
+    # Assuming both DataFrames have a common identifier column named 'Cinema'
+    # Adjust 'Cinema' to your specific identifier column if it's named differently
+    merged_df = df1.merge(df2, on='Cinema', how='outer', indicator=True)
+    new_entries = merged_df[merged_df['_merge'] == 'left_only']
+    
+    # Optionally, drop the merge indicator column and any columns from df2 if not needed
+    new_entries = new_entries.drop(columns=[col for col in new_entries.columns if col.endswith('_y') or col == '_merge'])
+    
+    # Rename columns ending with '_x' to their original names (from df1)
+    new_entries.columns = [col.rstrip('_x') if col.endswith('_x') else col for col in new_entries.columns]
+    
+    return new_entries
+
 st.title('Comparazione andamento cinema di settimana in settimana')
 
 input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
@@ -85,6 +99,18 @@ uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'],
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     processed_data1 = process_file(uploaded_file1, input_date1)
     processed_data2 = process_file(uploaded_file2, input_date2)
+
+    if not processed_data1.empty and not processed_data2.empty:
+        new_entries_df = find_new_entries(processed_data1, processed_data2)
+        
+        if not new_entries_df.empty:
+            st.write("New Entries exclusive to the first document", new_entries_df)
+        else:
+            st.info("No new entries found exclusive to the first document.")
+    else:
+        st.error("One or both of the processed DataFrames are empty.")
+else:
+    st.error("Please upload both files and select start dates for each.")
     
     week_start = input_date1.strftime('%d/%m/%Y')
     week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
@@ -122,6 +148,12 @@ if uploaded_file1:
         st.error("No L.R. totals to display or the document does not contain 'L.R.' column.")
 else:
     st.error("Please upload the first document.")
+
+
+
+
+
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
