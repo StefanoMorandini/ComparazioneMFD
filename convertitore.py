@@ -56,28 +56,29 @@ uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'],
 
 processed_data1, processed_data2 = None, None  # Explicitly define these variables to avoid reference before assignment.
 
-if uploaded_file1 and input_date1:
-    processed_data1 = process_file(uploaded_file1, input_date1)
-    if not processed_data1.empty:
-        st.write("Processed Data Pivot Table for the First File", processed_data1)
-        csv1 = processed_data1.to_csv(index=True).encode('utf-8')
-        st.download_button("Download processed data as CSV for the first file", data=csv1, file_name='processed_pivot_data1.csv', mime='text/csv', key='download1')
+if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
+    # Process the first file.
+    processed_data1 = None
+    if uploaded_file1:
+        processed_data1 = process_file(uploaded_file1, input_date1)
+        if not processed_data1.empty:
+            st.write("Processed Data for the First File", processed_data1)
+    
+    # Process the second file.
+    processed_data2 = None
+    if uploaded_file2:
+        processed_data2 = process_file(uploaded_file2, input_date2)
+        if not processed_data2.empty:
+            st.write("Processed Data for the Second File", processed_data2)
+    
+    # Ensure both data frames are valid before comparing.
+    if processed_data1 is not None and processed_data2 is not None and not processed_data1.empty and not processed_data2.empty:
+        comparison_df = compare_numeric_columns(processed_data1, processed_data2)
 
-if uploaded_file2 and input_date2:
-    processed_data2 = process_file(uploaded_file2, input_date2)
-    if not processed_data2.empty:
-        st.write("Processed Data Pivot Table for the Second File", processed_data2)
-        csv2 = processed_data2.to_csv(index=True).encode('utf-8')
-        st.download_button("Download processed data as CSV for the second file", data=csv2, file_name='processed_pivot_data2.csv', mime='text/csv', key='download2')
-
-# Ensure both dataframes are not None before proceeding with comparison.
-if processed_data1 is not None and processed_data2 is not None:
-    comparison_df = compare_numeric_columns(processed_data1, processed_data2)
-
-# Now safe to check if comparison_df is empty.
-if not comparison_df.empty:
+# Use isinstance to check if comparison_df is indeed a DataFrame before checking if it's empty.
+if isinstance(comparison_df, pd.DataFrame) and not comparison_df.empty:
     st.write("Comparison Results", comparison_df)
     csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
     st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
 else:
-    st.error("No comparison results to display or files not fully processed.")
+    st.error("No comparison results to display.")
