@@ -28,6 +28,8 @@ def process_file(file, input_date):
     # Initial preprocessing
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week']
     df = df.drop(columns=[col for col in df.columns if col in columns_to_drop or 'Box' in col], errors='ignore')
+    df.set_index('Cinema', inplace=True)
+
     
     df = rename_columns_based_on_input_date(df, input_date)
     
