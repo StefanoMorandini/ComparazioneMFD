@@ -82,7 +82,27 @@ else:
     st.error("Please upload both files and select start dates for each.")
 
 
+import matplotlib.pyplot as plt
+from pandas.plotting import table
+import pandas as pd
 
+def df_to_image(df, filename='dataframe.png'):
+    fig, ax = plt.subplots(figsize=(df.shape[1], df.shape[0]))  # Adjust figure size
+    ax.axis('tight')
+    ax.axis('off')
+    ax.table(cellText=df.values, colLabels=df.columns, cellLoc = 'center', loc='center')
+
+    plt.savefig(filename)
+    plt.close()
+    
+def get_image_download_link(img_path):
+    with open(img_path, "rb") as image_file:
+        data = base64.b64encode(image_file.read()).decode()
+    return f'<a href="data:image/png;base64,{data}" download="{img_path}">Download dataframe as image</a>'
+
+# Assuming your DataFrame is named `comparison_df`
+df_to_image(comparison_df, 'comparison_df.png')
+st.markdown(get_image_download_link('comparison_df.png'), unsafe_allow_html=True)
 
 
 
