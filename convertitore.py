@@ -57,9 +57,12 @@ if uploaded_file2 and input_date2:
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     comparison_df = compare_numeric_columns(processed_data1, processed_data2)
     if not comparison_df.empty:
-        st.write("Comparison Results", comparison_df)
-        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
-        st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
+    # Summing up all differences for each Cinema, conceptual example
+    summary_df = comparison_df.sum(axis=1).to_frame(name='Sum of Differences')
+    st.write("Summary of Differences by Cinema", summary_df)
+    csv_summary = summary_df.to_csv().encode('utf-8')
+    st.download_button("Download summary data as CSV", data=csv_summary, file_name='summary_data.csv', mime='text/csv')
+
     else:
         st.error("No comparison results to display.")
 
