@@ -123,11 +123,11 @@ title = f"Risultati della settimana dal {week_start} al {week_end}"
 
 # Convert DataFrame to PNG and provide a download link
 with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
-    df_to_image(comparison_df, tmp_file.name)
+    df_to_image(comparison_df, tmp_file.name, title=title)
     st.markdown(get_image_download_link(tmp_file.name, 'Comparazione_Cinema_Settimana_{input_date1}.png'), unsafe_allow_html=True)
 
 with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
-    df_to_image(processed_data1, tmp_file.name)
+    df_to_image(processed_data1, tmp_file.name, title=title)
     st.markdown(get_image_download_link(tmp_file.name, 'Risultati_byDay_ Cinema_Sett_base.png'), unsafe_allow_html=True)
 
 
