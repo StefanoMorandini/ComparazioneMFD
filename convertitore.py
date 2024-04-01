@@ -23,7 +23,7 @@ def create_region_totals_df(df):
         st.error("The DataFrame does not contain 'L.R.' column.")
         return pd.DataFrame()
     
-    day_columns = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    day_columns = ['Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday']
     columns_of_interest = ['L.R.'] + day_columns
     df_filtered = df[columns_of_interest]
     df_totals = df_filtered.groupby('L.R.').sum()
