@@ -18,6 +18,12 @@ def rename_columns_based_on_input_date(df, input_date):
             df.rename(columns={col_name: new_name}, inplace=True)
     return df
 
+# Initialize an empty DataFrame for region totals
+region_totals_df = pd.DataFrame()
+
+
+
+
 def create_region_totals_df(df):
     if 'L.R.' not in df.columns:
         st.error("The DataFrame does not contain 'L.R.' column.")
@@ -111,7 +117,20 @@ else:
     st.error("Please upload both files and select start dates for each.")
 
 
-
+if uploaded_file1:
+    processed_data1 = process_file(uploaded_file1, input_date1)
+    
+    # Now ensure processed_data1 exists and has data before attempting to create region_totals_df
+    if processed_data1 is not None and not processed_data1.empty:
+        region_totals_df = create_region_totals_df(processed_data1)
+    
+    # The .empty check can now safely proceed since region_totals_df is guaranteed to be defined
+    if not region_totals_df.empty:
+        st.write("Totals for each L.R. from the first document", region_totals_df)
+    else:
+        st.error("No L.R. totals to display or the document does not contain 'L.R.' column.")
+else:
+    st.error("Please upload the first document.")
 
 import pandas as pd
 import matplotlib.pyplot as plt
