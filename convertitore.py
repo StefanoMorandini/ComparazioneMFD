@@ -10,6 +10,8 @@ def add_sum_column(df):
 
 def rename_columns_based_on_input_date(df, input_date):
     days_of_week = ['Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday']
+    if 'Amd. Thu' in df.columns:
+        df.rename(columns={'Amd. Thu': 'Adm. Thu'}, inplace=True)
     for i, day in enumerate(days_of_week):
         # Calculate date for each day of the week based on input_date
         day_date = input_date + timedelta(days=i)
