@@ -35,6 +35,7 @@ def compare_numeric_columns(df1, df2):
     for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]
 
+comparison_df = pd.DataFrame()
 
 st.title('Cinema Data Processor with Date Selection')
 
@@ -58,22 +59,14 @@ if uploaded_file2 and input_date2:
         csv2 = processed_data2.to_csv(index=True).encode('utf-8')
         st.download_button("Download processed data as CSV for the second file", data=csv2, file_name='processed_pivot_data2.csv', mime='text/csv', key='download2')
 
-if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
-    processed_data1 = process_file(uploaded_file1, input_date1)
-    processed_data2 = process_file(uploaded_file2, input_date2)
-
-    # Ensure 'Cinema' is set as the index for both processed_data1 and processed_data2
-    if 'Cinema' in processed_data1.columns:
-        processed_data1.set_index('Cinema', inplace=True)
-    if 'Cinema' in processed_data2.columns:
-        processed_data2.set_index('Cinema', inplace=True)
-    
+# Ensure both files were uploaded and processed before attempting to compare
+if uploaded_file1 and uploaded_file2 and input_date1 and input_date2 and not processed_data1.empty and not processed_data2.empty:
     comparison_df = compare_numeric_columns(processed_data1, processed_data2)
-    if not comparison_df.empty:
-        st.write("Comparison Results", comparison_df)
-        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
-        st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
-    else:
-        st.error("No comparison results to display.")
 
+if not comparison_df.empty:
+    st.write("Comparison Results", comparison_df)
+    csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
+    st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
+else:
+    st.error("No comparison results to display.")
 
