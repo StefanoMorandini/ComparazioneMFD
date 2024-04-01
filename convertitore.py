@@ -62,7 +62,6 @@ def compare_numeric_columns(df1, df2):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]
     
     comparison_results['Total_diff'] = comparison_results.sum(axis=1)
- 
     
 
     return comparison_results
@@ -86,8 +85,6 @@ def find_new_entries(df1, df2):
     
     # Rename columns ending with '_x' to their original names (from df1)
     new_entries.columns = [col.rstrip('_x') if col.endswith('_x') else col for col in new_entries.columns]
-    new_entries['Total'] = new_entries.sum(axis=1)
-
     
     return new_entries
 
@@ -238,6 +235,9 @@ if not processed_data1.empty and not processed_data2.empty:
         st.error("No comparison results to display for the weekend.")
 else:
     st.error("DataFrames are empty or not properly loaded.")
+
+
+
 
 
 
