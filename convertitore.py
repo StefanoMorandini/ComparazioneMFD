@@ -19,10 +19,15 @@ def create_pivot_table(df):
     return df
 
 def add_total_row(df):
+    # Calculate the total for each column
     total_row = df.sum(numeric_only=True)
-    total_row.name = 'Total'
-    df = df.append(total_row.transpose())
-    return df
+    # Ensure 'Total' is a DataFrame with the same columns as df for appending
+    total_df = pd.DataFrame(total_row).transpose()
+    total_df.index = ['Total']
+    # Append total_df to df
+    df_with_total = pd.concat([df, total_df])
+    return df_with_total
+
 
 def process_file(file, input_date):
     df = pd.read_excel(file)
