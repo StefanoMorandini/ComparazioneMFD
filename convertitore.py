@@ -48,6 +48,36 @@ def compare_numeric_columns(df1, df2):
     for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]  # Calculate differences
     return comparison_results
+
+
+# Placeholder for loading data and getting unique L.R. values
+def get_unique_lr_values(file):
+    df = pd.read_excel(file)
+    if 'L.R.' in df.columns:
+        return ['Tutti'] + sorted(df['L.R.'].unique().tolist())
+    return ['Tutti']
+
+# Update here based on where you initially process your files
+if uploaded_file1:
+    lr_values1 = get_unique_lr_values(uploaded_file1)
+else:
+    lr_values1 = ['Tutti']
+
+if uploaded_file2:
+    lr_values2 = get_unique_lr_values(uploaded_file2)
+else:
+    lr_values2 = ['Tutti']
+
+# Combine both lists and remove duplicates, if necessary
+all_lr_values = sorted(set(lr_values1 + lr_values2))
+
+st.sidebar.title('Filtro')
+selected_lr = st.sidebar.selectbox('Seleziona il valore di L.R. per filtrare i risultati:', all_lr_values)
+
+def filter_df_by_lr(df, selected_lr):
+    if selected_lr != 'Tutti':
+        return df[df['L.R.'] == selected_lr]  # Filter by selected L.R. value
+    return df
  
 
 st.title('Comparazione andamento cinema di settimana in settimana')
@@ -61,6 +91,10 @@ uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'],
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     processed_data1 = process_file(uploaded_file1, input_date1)
     processed_data2 = process_file(uploaded_file2, input_date2)
+
+    if 'L.R.' in processed_data1.columns and 'L.R.' in processed_data2.columns:
+        processed_data1 = filter_df_by_lr(processed_data1, selected_lr)
+        processed_data2 = filter_df_by_lr(processed_data2, selected_lr)
     
     week_start = input_date1.strftime('%d/%m/%Y')
     week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
