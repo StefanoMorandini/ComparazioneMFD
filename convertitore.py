@@ -24,7 +24,13 @@ def process_file(file, input_date):
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim.', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week', 'Adm. Wedn']
     df = df.drop(columns=[col for col in df.columns if col in columns_to_drop or 'Box' in col], errors='ignore')
     df.set_index('Cinema', inplace=True)
-    df = rename_columns_based_on_input_date(df, input_date)
+    
+    # Renaming columns based on input date and capturing new column names
+    df, new_column_names = rename_columns_based_on_input_date(df, input_date)
+    
+    # Add a new column that sums the renamed columns
+    df['Sum of Renamed Columns'] = df[new_column_names].sum(axis=1)
+    
     df_pivot = create_pivot_table(df)
     return df_pivot
 
