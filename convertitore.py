@@ -78,41 +78,38 @@ if uploaded_file2 is not None and input_date2:
         st.error("Processing of the second file failed or resulted in an empty DataFrame.")
 
 
+def filter_matching_rows(df1, df2):
+    # Assuming df1 and df2 are already aligned by index
+    # This function filters both DataFrames to keep only rows where non-numeric data match
+    matching_indices = []
+    for idx in df1.index.intersection(df2.index):
+        if (df1.loc[idx].select_dtypes(exclude=['number']) == df2.loc[idx].select_dtypes(exclude=['number'])).all():
+            matching_indices.append(idx)
+    return df1.loc[matching_indices], df2.loc[matching_indices]
 
 def compare_numeric_columns(df1, df2):
-    # Ensure the indices of df1 and df2 match; adjust if necessary
-    # Assuming 'Cinema' is the index for both DataFrames
-    df1.set_index('Cinema', inplace=True)
-    df2.set_index('Cinema', inplace=True)
+    # Ensure indices match; adjust if necessary
+    df1, df2 = filter_matching_rows(df1, df2)
 
-    # Initialize an empty DataFrame for the comparison results
-    comparison_df = pd.DataFrame(index=df1.index)
+    comparison_results = pd.DataFrame(index=df1.index)
+    numeric_columns = df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns)
 
-    # Iterate through the columns in df1
-    for col in df1.columns:
-        if df1[col].dtype in ['int64', 'float64'] and col in df2.columns and df2[col].dtype in ['int64', 'float64']:
-            # Ensure only to compare rows where non-numeric data match
-            # This step assumes there's a way to identify non-numeric columns; here we check column data types directly
-            mask = (df1.select_dtypes(exclude=['int64', 'float64']) == df2.select_dtypes(exclude=['int64', 'float64'])).all(axis=1)
-            comparison_df[col] = None  # Initialize the column in the comparison DataFrame
-            comparison_df.loc[mask, col] = df1.loc[mask, col] - df2.loc[mask, col]  # Compute the difference for matching rows
+    for col in numeric_columns:
+        comparison_results[f'{col}_diff'] = df1[col] - df2[col]
 
-    return comparison_df
+    return comparison_results
 
-# Assuming df1 and df2 are your DataFrames after processing
+# Use these functions after loading and processing your DataFrames
 if uploaded_file1 is not None and uploaded_file2 is not None:
-    processed_data1 = process_file(uploaded_file1, input_date1)
-    processed_data2 = process_file(uploaded_file2, input_date2)
-    
-    # Comparing the DataFrames
+    processed_data1 = process_file(uploaded_file1, input_date1).set_index('Cinema')
+    processed_data2 = process_file(uploaded_file2, input_date2).set_index('Cinema')
+
     comparison_df = compare_numeric_columns(processed_data1, processed_data2)
-    
-    # Displaying and allowing download of the comparison DataFrame
+
     if not comparison_df.empty:
         st.write("Comparison Results", comparison_df)
         csv_comparison = comparison_df.to_csv().encode('utf-8')
         st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
     else:
         st.error("No comparison results to display.")
-
 
