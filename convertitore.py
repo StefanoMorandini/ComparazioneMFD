@@ -24,12 +24,19 @@ def process_file(file, input_date):
     return df
 
 def compare_numeric_columns(df1, df2):
-    df1, df2 = df1.align(df2, join='inner', axis=0)  # Align on index
+    # Ensure the DataFrames are aligned on the 'Cinema' index.
+    df1, df2 = df1.align(df2, join='inner', axis=0)
+    
+    # Prepare a DataFrame to hold comparison results, keeping 'Cinema' as the index.
     comparison_results = pd.DataFrame(index=df1.index)
-    for col in df1.select_dtypes(include=['number']).columns:
-        if col in df2.columns:
-            comparison_results[f'{col}_diff'] = df1[col] - df2[col]
+    
+    # Iterate over numeric columns present in both DataFrames for comparison.
+    for col in df1.select_dtypes(include=['number']).columns.intersection(df2.columns):
+        # Calculate the difference and store in the comparison DataFrame.
+        comparison_results[f'{col}_diff'] = df1[col] - df2[col]
+
     return comparison_results
+
 
 st.title('Cinema Data Processor with Date Selection')
 
