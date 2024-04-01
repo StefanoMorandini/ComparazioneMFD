@@ -84,7 +84,7 @@ def find_new_entries(df1, df2):
     
     # Rename columns ending with '_x' to their original names (from df1)
     new_entries.columns = [col.rstrip('_x') if col.endswith('_x') else col for col in new_entries.columns]
-    new.entries = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
+    new_entries = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
     
     return new_entries
 
