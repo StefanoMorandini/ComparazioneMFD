@@ -5,27 +5,43 @@ def process_file(file):
     # Read the Excel file
     df = pd.read_excel(file)
     
-    # Drop the specified columns and any columns containing 'Box'
+    # Initial processing to drop specified columns including any 'Box' related columns
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date']
-    df_dropped = df.drop(columns=[col for col in df.columns if 'Box' in col or col in columns_to_drop], errors='ignore')
+    df = df.drop(columns=[col for col in df.columns if 'Box' in col or col in columns_to_drop], errors='ignore')
     
-    # Convert 'Start Date' to datetime to find the most frequent start date
-    df_dropped['Start Date'] = pd.to_datetime(df_dropped['Start Date'])
-    most_frequent_start_date = df_dropped['Start Date'].mode()[0]  # Get the most common start date
-    formatted_date = most_frequent_start_date.strftime('%d/%m/%Y')  # Format date
+    if 'Start Date' in df.columns:
+        df['Start Date'] = pd.to_datetime(df['Start Date'])
+        most_frequent_start_date = df['Start Date'].mode()[0]  # Get the most common start date
+        formatted_date = most_frequent_start_date.strftime('%d/%m/%Y')  # Format date
+        # Replace 'Adm' in column names with the formatted date
+        df = df.rename(columns=lambda x: x.replace('Adm', formatted_date) if 'Adm' in x else x)
     
-    # Replace 'Adm' in column names with the formatted date
-    df_renamed = df_dropped.rename(columns=lambda x: x.replace('Adm', formatted_date) if 'Adm' in x else x)
-    
-    # Dropping 'Start Date' and 'End Date' has already been handled in `columns_to_drop`
-    # Set 'Cinema' as the index
-    df_renamed.set_index('Cinema', inplace=True)
-    
-    # Creating a pivot table
-    # The pivot operation here is a bit more complex due to the structure described
-    # Assuming 'Title' and specific dates now represent different categories of information, we need to clarify the desired pivot table's structure
-    # If the aim is to have a multi-index pivot table with 'Cinema' and 'Title', and dates as columns, we need example data structure to proceed correctly
-    
-    return df_renamed  # This line is placeholder; adjust pivot operation as clarified
+    # Assuming you want to pivot on some value columns that you've now renamed to dates
+    # First, ensure 'Cinema' and 'Title' are not set as index yet for pivot operation
+    if 'Cinema' in df.columns and 'Title' in df.columns:
+        # Determine which columns to use for the pivot table (excluding 'Cinema' and 'Title')
+        pivot_columns = [col for col in df.columns if col not in ['Cinema', 'Title']]
+        # Pivot operation
+        df_pivot = pd.pivot_table(df, values=pivot_columns, index=['Cinema', 'Title'], aggfunc=np.sum)
+        return df_pivot
+    else:
+        return pd.DataFrame()  # Return an empty DataFrame if essential columns are missing
 
-# Streamlit UI setup remains the same as previously described
+# Streamlit UI
+st.title('Cinema Data Processor')
+
+uploaded_file = st.file_uploader("Choose an Excel file", type=['xlsx'])
+
+if uploaded_file is not None:
+    processed_data = process_file(uploaded_file)
+    
+    st.write("Processed Data Pivot Table", processed_data)
+    
+    # Convert pivot table to CSV for download
+    csv = processed_data.to_csv().encode('utf-8')
+    st.download_button(
+        label="Download pivot table as CSV",
+        data=csv,
+        file_name='pivot_table.csv',
+        mime='text/csv',
+    )
