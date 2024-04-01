@@ -3,11 +3,12 @@ import pandas as pd
 from datetime import timedelta
 
 def rename_columns_based_on_input_date(df, input_date):
-    original_columns = ['Adm. Wed', 'Amd. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
+    original_columns = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
     rename_dict = {}
     for i, col in enumerate(original_columns):
         new_name = (input_date + timedelta(days=i)).strftime('%Y-%m-%d')
-        rename_dict[col] = new_name
+        if col in df.columns:  # Ensure column exists before attempting to rename
+            rename_dict[col] = new_name
     return df.rename(columns=rename_dict)
 
 def process_file(file, input_date):
@@ -17,9 +18,11 @@ def process_file(file, input_date):
     df = rename_columns_based_on_input_date(df, input_date)
     
     if 'Cinema' in df.columns:
-        df['Sum of Renamed Columns'] = df.select_dtypes(include=['number']).sum(axis=1)
-        grouped_df = df.groupby('Cinema', as_index=False).sum()
-        grouped_df.set_index('Cinema', inplace=True)
+        # Group by 'Cinema' and calculate sum for numerical columns
+        grouped_df = df.groupby('Cinema').sum()
+        # Calculate totals for each numerical column and append as a new row
+        totals = grouped_df.sum(numeric_only=True).rename('Total')
+        grouped_df = grouped_df.append(totals)
     else:
         st.error("'Cinema' column not found. Please check your file.")
         return pd.DataFrame()
@@ -69,3 +72,20 @@ if not comparison_df.empty:
     st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
 else:
     st.error("No comparison results to display or one of the files did not process correctly.")
+
+if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
+    processed_data1 = process_file(uploaded_file1, input_date1)
+    processed_data2 = process_file(uploaded_file2, input_date2)
+    
+    # Display the processed data and provide download links...
+
+    comparison_df = pd.DataFrame()
+    if not processed_data1.empty and not processed_data2.empty:
+        comparison_df = compare_numeric_columns(processed_data1.drop('Total'), processed_data2.drop('Total'))
+
+    if not comparison_df.empty:
+        st.write("Comparison Results", comparison_df)
+        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
+        st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
+    else:
+        st.error("No comparison results to display or one of the files did not process correctly.")
