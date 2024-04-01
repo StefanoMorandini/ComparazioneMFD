@@ -7,21 +7,20 @@ def rename_columns_based_on_input_date(df, input_date):
     rename_dict = {}
     for i, col in enumerate(original_columns):
         new_name = (input_date + timedelta(days=i)).strftime('%Y-%m-%d')
-        if col in df.columns:  # Ensure column exists before attempting to rename
-            rename_dict[col] = new_name
+        rename_dict[col] = new_name
     return df.rename(columns=rename_dict)
 
 def process_file(file, input_date):
     df = pd.read_excel(file)
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim.', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week', 'Adm. Wedn']
     df = df.drop(columns=[col for col in df.columns if col in columns_to_drop or 'Box' in col], errors='ignore')
-    if 'Cinema' not in df.columns:
-        st.error("'Cinema' column not found. Please check your file.")
-        return pd.DataFrame()
-    df.set_index('Cinema', inplace=True)
     df = rename_columns_based_on_input_date(df, input_date)
     df['Sum of Renamed Columns'] = df.select_dtypes(include=['number']).sum(axis=1)
     df.loc['Total'] = df.select_dtypes(include=['number']).sum()
+    if 'Cinema' in df.columns:
+        df.set_index('Cinema', inplace=True)
+    else:
+        df.index.name = 'Cinema'
     return df
 
 def compare_numeric_columns(df1, df2):
@@ -57,15 +56,10 @@ if uploaded_file2 and input_date2:
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     comparison_df = compare_numeric_columns(processed_data1, processed_data2)
     if not comparison_df.empty:
-    # Summing up all differences for each Cinema, conceptual example
-    summary_df = comparison_df.sum(axis=1).to_frame(name='Sum of Differences')
-    st.write("Summary of Differences by Cinema", summary_df)
-    csv_summary = summary_df.to_csv().encode('utf-8')
-    st.download_button("Download summary data as CSV", data=csv_summary, file_name='summary_data.csv', mime='text/csv')
-
+        st.write("Comparison Results", comparison_df)
+        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
+        st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
     else:
         st.error("No comparison results to display.")
-
-
 
 
