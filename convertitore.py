@@ -82,39 +82,42 @@ else:
     st.error("Please upload both files and select start dates for each.")
 
 
-import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from pandas.plotting import table
 import base64
+import streamlit as st
 from tempfile import NamedTemporaryFile
 
-def df_to_image(df, filename='dataframe.png'):
-    fig, ax = plt.subplots(figsize=(df.shape[1], df.shape[0]))  # Adjust figure size
-    ax.axis('tight')
-    ax.axis('off')
-    tbl = table(ax, df, loc='center', cellLoc='center')
-    tbl.auto_set_font_size(False)
-    tbl.set_fontsize(10)  # Adjust font size
-    plt.savefig(filename, bbox_inches='tight', dpi=150)
-    plt.close(fig)
+def df_to_image(df, filename):
+    # Calculate figure size to somewhat dynamically handle different DataFrame sizes
+    fig_size = (max(6, len(df.columns) * 1.5), max(4, len(df) * 0.5))
+    fig, ax = plt.subplots(figsize=fig_size)  # Adjust figure size dynamically
+    ax.axis('off')  # Hide the axes
 
-def get_image_download_link(img_path, filename='dataframe.png'):
-    with open(img_path, "rb") as image_file:
-        data = base64.b64encode(image_file.read()).decode()
-    href = f'<a href="data:image/png;base64,{data}" download="{filename}">Download dataframe as image</a>'
+    # Create the table and adjust font if needed
+    tbl = table(ax, df, loc='center', cellLoc='center', colWidths=[0.1]*len(df.columns))
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(10)  # Small font size to fit more columns
+    tbl.scale(1.2, 1.2)  # Scale table size to make it more readable
+
+    plt.savefig(filename, bbox_inches='tight', pad_inches=0.05, dpi=150)
+    plt.close()
+
+def get_image_download_link(filepath, filename='dataframe.png'):
+    with open(filepath, "rb") as file:
+        data = base64.b64encode(file.read()).decode('utf-8')
+    href = f'<a href="data:file/png;base64,{data}" download="{filename}">Download as PNG</a>'
     return href
 
-# Streamlit UI
-st.title('Download Comparazione as PNG')
 
-# Displaying the DataFrame in the app for reference
-st.write("Sample DataFrame:", comparison_df)
 
-# Convert DataFrame to image and create a temporary file for download
-with NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-    df_to_image(comparison_df, tmpfile.name)
-    st.markdown(get_image_download_link(tmpfile.name, 'comparison_df.png'), unsafe_allow_html=True)
+
+# Convert DataFrame to PNG and provide a download link
+with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+    df_to_image(comparison_df, tmp_file.name)
+    st.markdown(get_image_download_link(tmp_file.name, 'DataFrame.png'), unsafe_allow_html=True)
+
 
 
 
