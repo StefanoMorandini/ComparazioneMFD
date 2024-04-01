@@ -60,6 +60,9 @@ def compare_numeric_columns(df1, df2):
     comparison_results = pd.DataFrame(index=df1.index)
     for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]
+    
+    comparison_results['Total_diff'] = comparison_results.sum(axis=1)
+
     return comparison_results
 
 # Function to dynamically get unique L.R. values from a file
@@ -69,13 +72,6 @@ def get_unique_lr_values(file):
         return sorted(df_temp['L.R.'].dropna().unique().tolist())
     return []
 
-def compare_numeric_columns(df1, df2):
-    df1, df2 = df1.align(df2, join='inner', axis=0)  # Align DataFrames based on 'Cinema' index
-    comparison_results = pd.DataFrame(index=df1.index)
-    for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
-        comparison_results[f'{col}_diff'] = df1[col] - df2[col]  # Calculate differences
-    return comparison_results
- 
 
 st.title('Comparazione andamento cinema di settimana in settimana')
 
