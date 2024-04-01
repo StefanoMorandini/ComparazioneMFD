@@ -18,6 +18,19 @@ def rename_columns_based_on_input_date(df, input_date):
             df.rename(columns={col_name: new_name}, inplace=True)
     return df
 
+def create_region_totals_df(df):
+    if 'L.R.' not in df.columns:
+        st.error("The DataFrame does not contain 'L.R.' column.")
+        return pd.DataFrame()
+    
+    day_columns = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    columns_of_interest = ['L.R.'] + day_columns
+    df_filtered = df[columns_of_interest]
+    df_totals = df_filtered.groupby('L.R.').sum()
+    df_totals['Total'] = df_totals.sum(axis=1)
+    
+    return df_totals
+
 # Function to process the uploaded file
 def process_file(file, input_date):
     df = pd.read_excel(file)
@@ -63,6 +76,7 @@ st.title('Comparazione andamento cinema di settimana in settimana')
 input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
 uploaded_file1 = st.file_uploader("Choose the first Excel file", type=['xlsx'], key='file1')
 
+
 input_date2 = st.date_input("Seleziona il mercoledì della settimana con cui vuoi comparare i risultati:", value=pd.to_datetime('today'), key='date2')
 uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'], key='file2')
 
@@ -73,6 +87,11 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     week_start = input_date1.strftime('%d/%m/%Y')
     week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
     results_title = f"Risultati della settimana dal {week_start} al {week_end}"
+
+    if not region_totals_df.empty:
+            st.write("Totals for each L.R. from the first document", region_totals_df)
+        else:
+            st.error("No L.R. totals to display.")
     
     st.subheader(results_title)
     if not processed_data1.empty and not processed_data2.empty:
@@ -179,31 +198,7 @@ else:
     st.error("DataFrames are empty or not properly loaded.")
 
 
-def create_region_totals_df(df):
-    if 'L.R.' not in df.columns:
-        st.error("The DataFrame does not contain 'L.R.' column.")
-        return pd.DataFrame()
-    
-    day_columns = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    columns_of_interest = ['L.R.'] + day_columns
-    df_filtered = df[columns_of_interest]
-    df_totals = df_filtered.groupby('L.R.').sum()
-    df_totals['Total'] = df_totals.sum(axis=1)
-    
-    return df_totals
 
-if uploaded_file1:
-    input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
-    processed_data1 = process_file(uploaded_file1, input_date1)
-    
-    if not processed_data1.empty:
-        region_totals_df = create_region_totals_df(processed_data1)
-        
-        if not region_totals_df.empty:
-            st.write("Totals for each L.R. from the first document", region_totals_df)
-        else:
-            st.error("No L.R. totals to display.")
-else:
-    st.error("Please upload the first document.")
+
 
 
