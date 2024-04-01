@@ -2,6 +2,12 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 
+def add_sum_column(df):
+    # Assuming day-of-the-week columns are all the numeric columns except the 'Total' row
+    day_columns = [col for col in df.columns if col in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']]
+    df['Sum'] = df[day_columns].sum(axis=1)
+    return df
+
 def rename_columns_based_on_input_date(df, input_date):
     days_of_week = ['Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday']
     for i, day in enumerate(days_of_week):
@@ -37,7 +43,9 @@ def compare_numeric_columns(df1, df2):
     comparison_results = pd.DataFrame(index=df1.index)
     for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]  # Calculate differences
+    comparison_results = add_sum_column(comparison_results)
     return comparison_results
+ 
 
 st.title('Cinema Data Processor with Date Selection and Aggregated Comparison')
 
