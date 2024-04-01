@@ -61,3 +61,55 @@ if uploaded_file2 is not None and input_date2:
     else:
         st.error("Processing of the second file failed or resulted in an empty DataFrame.")
 
+
+import streamlit as st
+import pandas as pd
+
+# Assuming process_file() function is defined as before
+# and returns a DataFrame with only numerical columns for comparison
+
+def compare_dataframes(df1, df2):
+    # Ensure both DataFrames have the same structure for comparison
+    if len(df1.columns) != len(df2.columns):
+        st.error("The DataFrames have different numbers of columns and cannot be compared directly.")
+        return pd.DataFrame()
+    
+    comparison_results = []
+    for col in range(len(df1.columns)):
+        # Check if columns are numeric for both DataFrames
+        if pd.api.types.is_numeric_dtype(df1.iloc[:, col]) and pd.api.types.is_numeric_dtype(df2.iloc[:, col]):
+            # Perform the desired comparison, e.g., difference
+            column_comparison = df1.iloc[:, col] - df2.iloc[:, col]
+        else:
+            # For non-numeric columns, place a placeholder or handle as needed
+            column_comparison = pd.Series([None] * len(df1), name=df1.columns[col])
+        comparison_results.append(column_comparison)
+    
+    # Create a new DataFrame with the comparison results
+    comparison_df = pd.concat(comparison_results, axis=1)
+    comparison_df.columns = df1.columns  # Set column names based on the first DataFrame
+    return comparison_df
+
+# Streamlit UI and file processing setup remains the same
+
+# After processing both files:
+if uploaded_file1 is not None and uploaded_file2 is not None:
+    processed_data1 = process_file(uploaded_file1, input_date1)
+    processed_data2 = process_file(uploaded_file2, input_date2)
+    
+    # Assuming both files have been processed and are ready for comparison
+    comparison_df = compare_dataframes(processed_data1, processed_data2)
+    
+    if not comparison_df.empty:
+        st.write("Comparison of DataFrames", comparison_df)
+        
+        # Option to download the comparison DataFrame as CSV
+        csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
+        st.download_button(
+            "Download comparison data as CSV",
+            data=csv_comparison,
+            file_name='comparison_data.csv',
+            mime='text/csv'
+        )
+
+
