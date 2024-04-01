@@ -113,7 +113,7 @@ st.write("Sample DataFrame:", comparison_df)
 
 # Convert DataFrame to image and create a temporary file for download
 with NamedTemporaryFile(delete=False, suffix=".png") as tmpfile:
-    df_to_image(df_sample, tmpfile.name)
+    df_to_image(comparison_df, tmpfile.name)
     st.markdown(get_image_download_link(tmpfile.name, 'comparison_df.png'), unsafe_allow_html=True)
 
 
