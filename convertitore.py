@@ -62,12 +62,12 @@ def compare_numeric_columns(df1, df2):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]
     
     comparison_results['Total_diff'] = comparison_results.sum(axis=1)
-    if 'Cinema' in df.columns:
-        df = df.groupby('Cinema', as_index=False).sum()
-        totals = df.sum(numeric_only=True)
+    if 'Cinema' in comparison_results.columns:
+        comparison_results = comparison_results.groupby('Cinema', as_index=False).sum()
+        totals = comparison_results.sum(numeric_only=True)
         totals['Cinema'] = 'Total'
-        df = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
-        df.set_index('Cinema', inplace=True)
+        comparison_results = pd.concat([comparison_results, pd.DataFrame([totals])], ignore_index=True)
+        comparison_results.set_index('Cinema', inplace=True)
     else:
         st.error("'Cinema' column not found. Please check your file.")
         return pd.DataFrame()
