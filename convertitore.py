@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import timedelta
 
 def rename_columns_based_on_input_date(df, input_date):
-    original_columns = ['Adm. Wed', 'Adm. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
+    original_columns = ['Adm. Wed', 'Amd. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
     rename_dict = {}
     for i, col in enumerate(original_columns):
         new_name = (input_date + timedelta(days=i)).strftime('%Y-%m-%d')
