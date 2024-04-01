@@ -123,7 +123,7 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
         st.write("Risultati della settimana base", processed_data1)
         st.write("Risultati della settimana di riferimento", processed_data2)
         
-        comparison_df = compare_numeric_columns(processed_data1.drop(index='Total'), processed_data2.drop(index='Total'))
+        
         if not comparison_df.empty:
             st.write("Risultati della comparazione", comparison_df)
             csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
