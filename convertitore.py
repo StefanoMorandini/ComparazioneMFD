@@ -18,6 +18,12 @@ def create_pivot_table(df):
         return df_pivot
     return df
 
+def add_total_row(df):
+    total_row = df.sum(numeric_only=True)
+    total_row.name = 'Total'
+    df = df.append(total_row.transpose())
+    return df
+
 def process_file(file, input_date):
     df = pd.read_excel(file)
     columns_to_drop = ['Dim', 'Box. Weekend', 'Box. Week', 'Start Date', 'End Date', 'TT', 'Distr.', 'Dim.', 'MT', 'Adm. Week', 'Adm. Weekend', 'Adm. Comp. Week', 'Adm. Wedn']
@@ -26,9 +32,14 @@ def process_file(file, input_date):
     
     df, new_column_names = rename_columns_based_on_input_date(df, input_date)
     df['Sum of Renamed Columns'] = df[new_column_names].sum(axis=1)
+    df = add_total_row(df)
+
     
     df_pivot = create_pivot_table(df)
     return df_pivot
+
+
+
 
 # Streamlit UI setup
 st.title('Comparing Analysis')
@@ -60,6 +71,7 @@ if uploaded_file2 is not None and input_date2:
         st.download_button("Download processed data as CSV for the second file", data=csv2, file_name='processed_pivot_data2.csv', mime='text/csv', key='download2')
     else:
         st.error("Processing of the second file failed or resulted in an empty DataFrame.")
+
 
 
 import streamlit as st
