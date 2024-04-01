@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 
+def display_day_of_week_headers(dates):
+    days_of_week = [pd.to_datetime(date).strftime('%A') for date in dates]
+    return ' | '.join(days_of_week)
+
 def rename_columns_based_on_input_date(df, input_date):
     original_columns = ['Adm. Wed', 'Amd. Thu', 'Adm. Fri', 'Adm. Sat', 'Adm. Sun', 'Adm. Mon', 'Adm. Tue']
     rename_dict = {}
