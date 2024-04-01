@@ -105,12 +105,8 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
         
         if not new_entries_df.empty:
             st.write("New Entries exclusive to the first document", new_entries_df)
-        else:
-            st.info("No new entries found exclusive to the first document.")
-    else:
-        st.error("One or both of the processed DataFrames are empty.")
-else:
-    st.error("Please upload both files and select start dates for each.")
+        
+
     
     week_start = input_date1.strftime('%d/%m/%Y')
     week_end = (input_date1 + timedelta(days=6)).strftime('%d/%m/%Y')
