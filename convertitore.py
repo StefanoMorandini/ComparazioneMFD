@@ -32,6 +32,8 @@ def process_file(file, input_date):
         totals['Cinema'] = 'Total'  # Mark this row as 'Total'
         df = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
         df.set_index('Cinema', inplace=True)
+        df = add_sum_column(df)
+
     else:
         st.error("'Cinema' column not found. Please check your file.")
         return pd.DataFrame()
@@ -43,7 +45,6 @@ def compare_numeric_columns(df1, df2):
     comparison_results = pd.DataFrame(index=df1.index)
     for col in df1.select_dtypes(include=['number']).columns.intersection(df2.select_dtypes(include=['number']).columns):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]  # Calculate differences
-    comparison_results = add_sum_column(comparison_results)
     return comparison_results
  
 
