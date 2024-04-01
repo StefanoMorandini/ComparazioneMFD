@@ -48,12 +48,12 @@ def compare_numeric_columns(df1, df2):
     return comparison_results
  
 
-st.title('Cinema Data Processor with Date Selection and Aggregated Comparison')
+st.title('Comparazione andamento cinema di settimana in settimana')
 
-input_date1 = st.date_input("Select the start date for renaming 'Adm' columns for the first file:", value=pd.to_datetime('today'), key='date1')
+input_date1 = st.date_input("Seleziona il mercoledì della data che vuoi avere come riferimento:", value=pd.to_datetime('today'), key='date1')
 uploaded_file1 = st.file_uploader("Choose the first Excel file", type=['xlsx'], key='file1')
 
-input_date2 = st.date_input("Select the start date for renaming 'Adm' columns for the second file:", value=pd.to_datetime('today'), key='date2')
+input_date2 = st.date_input("Seleziona il mercoledì della settimana con cui vuoi comparare i risultati:", value=pd.to_datetime('today'), key='date2')
 uploaded_file2 = st.file_uploader("Choose the second Excel file", type=['xlsx'], key='file2')
 
 if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
@@ -66,14 +66,14 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
     
     st.subheader(results_title)
     if not processed_data1.empty and not processed_data2.empty:
-        st.write("Processed Data for the First File", processed_data1)
-        st.write("Processed Data for the Second File", processed_data2)
+        st.write("Risultati della settimana base", processed_data1)
+        st.write("Risultati della settimana di riferimento", processed_data2)
         
         comparison_df = compare_numeric_columns(processed_data1.drop(index='Total'), processed_data2.drop(index='Total'))
         if not comparison_df.empty:
-            st.write("Comparison Results", comparison_df)
+            st.write("Risultati della comparazione", comparison_df)
             csv_comparison = comparison_df.to_csv(index=True).encode('utf-8')
-            st.download_button("Download comparison data as CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
+            st.download_button("Scarica comparazione in CSV", data=csv_comparison, file_name='comparison_data.csv', mime='text/csv')
         else:
             st.error("No comparison results to display.")
     else:
@@ -116,7 +116,7 @@ def get_image_download_link(filepath, filename='dataframe.png'):
 # Convert DataFrame to PNG and provide a download link
 with NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
     df_to_image(comparison_df, tmp_file.name)
-    st.markdown(get_image_download_link(tmp_file.name, 'DataFrame.png'), unsafe_allow_html=True)
+    st.markdown(get_image_download_link(tmp_file.name, 'Comparazione_Cinema_Settimana_{input_date1}.png'), unsafe_allow_html=True)
 
 
 
