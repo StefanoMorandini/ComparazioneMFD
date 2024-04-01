@@ -90,8 +90,8 @@ if uploaded_file1 and uploaded_file2 and input_date1 and input_date2:
 
     if not region_totals_df.empty:
             st.write("Totals for each L.R. from the first document", region_totals_df)
-        else:
-            st.error("No L.R. totals to display.")
+    else:
+        st.error("No L.R. totals to display.")
     
     st.subheader(results_title)
     if not processed_data1.empty and not processed_data2.empty:
