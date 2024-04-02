@@ -84,6 +84,8 @@ def find_new_entries(df1, df2):
     
     # Rename columns ending with '_x' to their original names (from df1)
     new_entries.columns = [col.rstrip('_x') if col.endswith('_x') else col for col in new_entries.columns]
+    new_entries['Totale'] = new_entries.sum(axis=1)
+
     
     return new_entries
 
