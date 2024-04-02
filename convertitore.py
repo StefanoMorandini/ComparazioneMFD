@@ -62,7 +62,6 @@ def compare_numeric_columns(df1, df2):
         comparison_results[f'{col}_diff'] = df1[col] - df2[col]
     
     comparison_results['Total_diff'] = comparison_results.sum(axis=1)
-    comparison_results['Totale'] = comparison_results.sum(axis=0)
 
     return comparison_results
 
